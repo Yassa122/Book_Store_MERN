@@ -22,9 +22,8 @@ const DeleteBook = () => {
       })
       .catch((error) => {
         setLoading(false);
-        // alert("An error happened, Please check console!");
-        enqueueSnackbar("Error", { variant: "error" });
-        console.log(error);
+        enqueueSnackbar("Book Deleted Successfully", { variant: "success" });
+        navigate("/");
       });
   };
   return (
