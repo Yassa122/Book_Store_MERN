@@ -64,8 +64,9 @@ const EditBook = () => {
       })
       .catch((error) => {
         setLoading(false);
-        enqueueSnackbar("Failed to edit book", { variant: "error" });
-        console.error("Error editing book:", error);
+        // alert("An error happened, Please check console!");
+        enqueueSnackbar("Error", { variant: "error" });
+        console.log(error);
       });
   };
 

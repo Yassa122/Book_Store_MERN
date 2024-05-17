@@ -12,6 +12,7 @@ const DeleteBook = () => {
   const { id } = useParams();
   const { enqueueSnackbar } = useSnackbar();
   const handleDeleteBook = () => {
+    console.log("ENTER DELETE");
     setLoading(true);
     axios
       .delete(`http://localhost:5555/books/${id}`)

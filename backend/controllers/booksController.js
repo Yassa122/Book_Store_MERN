@@ -14,6 +14,14 @@ import multer from 'multer';
 
 // Load environment variables from .env file
 dotenv.config();
+// Debug logging to verify environment variables
+console.log("Loading AWS SDK configuration...");
+console.log("AWS_REGION:", process.env.AWS_REGION);
+console.log("AWS_ACCESS_KEY_ID:", process.env.AWS_ACCESS_KEY_ID);
+console.log(
+  "AWS_SECRET_ACCESS_KEY:",
+  process.env.AWS_SECRET_ACCESS_KEY ? "*****" : "Not set"
+);
 
 // AWS SDK v3 Configuration
 const client = new DynamoDBClient({
@@ -89,6 +97,8 @@ export const getAllBooks = async (req, res) => {
 
     const command = new ScanCommand(params);
     const data = await client.send(command);
+  console.log("Raw data from DynamoDB:", data);
+
     const books = data.Items.map((item) => ({
       id: item.id?.S,
       title: item.title?.S,
@@ -113,6 +123,8 @@ export const getAllBooks = async (req, res) => {
 export const getBookById = async (req, res) => {
   try {
     const { id } = req.params;
+
+    console.log("IDDDDD:" , id);
 
     const params = {
       TableName: "Books",
@@ -209,6 +221,8 @@ export const updateBook = async (req, res) => {
 export const deleteBook = async (req, res) => {
   try {
     const { id } = req.params;
+
+    console.log("IDDDDDDDDDDDDD:" , id);
 
     const params = {
       TableName: "Books",
