@@ -61,7 +61,7 @@ export const createBook = async (req, res) => {
       const data = await s3.send(command);
 
 
-      imageUrl = `https://${process.env.AWS_S3_BUCKET_NAME_BEFORE}.s3.amazonaws.com/${uploadParams.Key}`;
+      imageUrl = `https://${process.env.AWS_S3_BUCKET_NAME_AFTER}.s3.amazonaws.com/${uploadParams.Key}`;
       console.log("IMAGE URLLLL:" , imageUrl)
 
     }

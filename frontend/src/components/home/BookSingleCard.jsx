@@ -21,12 +21,13 @@ const BookSingleCard = ({ book }) => {
         {book.publishYear}
       </h2>
       <div className="flex justify-center">
-        {book.imageUrl ? (
-          <img
-            src={book.imageUrl}
-            alt={book.title}
-            className="w-full h-auto rounded-lg mb-4"
-          />
+  {book.imageUrl ? (
+    <img
+      src={book.imageUrl}
+      alt={book.title}
+      className="rounded-lg mb-4"
+      style={{ display: 'block' }}
+    />
         ) : (
           <div className="w-full h-64 bg-gray-200 flex items-center justify-center rounded-lg mb-4">
             <span className="text-gray-500">No Image Available</span>
