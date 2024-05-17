@@ -11,7 +11,6 @@ import {
 const router = express.Router();
 const upload = multer();
 
-console.log("in routess")
 // Route for saving a new book
 router.post("/",upload.single('image') ,createBook);
 

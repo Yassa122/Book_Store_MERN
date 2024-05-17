@@ -15,15 +15,6 @@ import multer from 'multer';
 // Load environment variables from .env file
 dotenv.config();
 
-// Debug logging to verify environment variables
-console.log("Loading AWS SDK configuration...");
-console.log("AWS_REGION:", process.env.AWS_REGION);
-console.log("AWS_ACCESS_KEY_ID:", process.env.AWS_ACCESS_KEY_ID);
-console.log(
-  "AWS_SECRET_ACCESS_KEY:",
-  process.env.AWS_SECRET_ACCESS_KEY ? "*****" : "Not set"
-);
-
 // AWS SDK v3 Configuration
 const client = new DynamoDBClient({
   region: process.env.AWS_REGION,
