@@ -6,7 +6,11 @@ import {
   UpdateItemCommand,
   DeleteItemCommand,
 } from "@aws-sdk/client-dynamodb";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+
 import dotenv from "dotenv";
+import multer from 'multer';
+
 
 // Load environment variables from .env file
 dotenv.config();
@@ -29,13 +33,38 @@ const client = new DynamoDBClient({
   },
 });
 
+const s3 = new S3Client({ region: process.env.AWS_REGION });
+const upload = multer({ dest: '../uploads/' });
+
+
 // Controller for creating a new book
 export const createBook = async (req, res) => {
   try {
-    if (!req.body.title || !req.body.author || !req.body.publishYear) {
-      return res.status(400).send({
-        message: "Send all required fields!",
-      });
+    const { title, author, publishYear } = req.body;
+    const { file } = req; 
+
+    console.log("FILEEE: " , file);
+
+    let imageUrl = null;
+
+    console.log(process.env.AWS_S3_BUCKET_NAME_BEFORE)
+
+    if (file) {
+      console.log("enter");
+      const uploadParams = {
+        Bucket: process.env.AWS_S3_BUCKET_NAME_BEFORE,
+        // Key: `${Date.now()}_${file.originalname}`, 
+        Key: `${file.originalname}`, 
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      };
+      const command = new PutObjectCommand(uploadParams);
+      const data = await s3.send(command);
+
+
+      imageUrl = `https://${process.env.AWS_S3_BUCKET_NAME_BEFORE}.s3.amazonaws.com/${uploadParams.Key}`;
+      console.log("IMAGE URLLLL:" , imageUrl)
+
     }
 
     const params = {
@@ -47,12 +76,12 @@ export const createBook = async (req, res) => {
         publishYear: { N: req.body.publishYear.toString() },
         createdAt: { S: new Date().toISOString() },
         updatedAt: { S: new Date().toISOString() },
+        imageUrl: { S: imageUrl },
       },
     };
 
     const command = new PutItemCommand(params);
     const data = await client.send(command);
-    console.log("Data inserted successfully!", data);
     res.status(201).send("Data inserted successfully!");
   } catch (error) {
     console.log("Error inserting data into database", error);
@@ -69,8 +98,6 @@ export const getAllBooks = async (req, res) => {
 
     const command = new ScanCommand(params);
     const data = await client.send(command);
-    console.log("Raw data from DynamoDB:", data);
-
     const books = data.Items.map((item) => ({
       id: item.id?.S,
       title: item.title?.S,
@@ -78,6 +105,7 @@ export const getAllBooks = async (req, res) => {
       publishYear: item.publishYear?.N,
       createdAt: item.createdAt?.S,
       updatedAt: item.updatedAt?.S,
+      imageUrl: item.imageUrl?.S,
     }));
 
     res.status(200).json({
@@ -116,6 +144,7 @@ export const getBookById = async (req, res) => {
       publishYear: data.Item.publishYear?.N,
       createdAt: data.Item.createdAt?.S,
       updatedAt: data.Item.updatedAt?.S,
+      imageUrl: data.Item.imageUrl?.S,
     };
 
     res.status(200).json(book);
@@ -129,12 +158,31 @@ export const getBookById = async (req, res) => {
 export const updateBook = async (req, res) => {
   try {
     if (!req.body.title || !req.body.author || !req.body.publishYear) {
-      return res.status(400).send({
-        message: "Send all required fields!",
-      });
+      console.log("ERRRORRR")
     }
 
+    console.log("UPDATEEEEEEEEEEEEEEEE::",req.body);
+
     const { id } = req.params;
+    const file = req.file;
+
+    let imageUrl = null;
+
+    if (file) {
+      const uploadParams = {
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: `${Date.now()}_${file.originalname}`, // Using a timestamp to make the filename unique
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        ACL: 'public-read', // Make the file publicly readable
+      };
+
+      const command = new PutObjectCommand(uploadParams);
+      await s3Client.send(command);
+
+      // Generate the S3 object URL
+      imageUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${uploadParams.Key}`;
+    }
 
     const params = {
       TableName: "Books",
@@ -142,12 +190,13 @@ export const updateBook = async (req, res) => {
         id: { S: id },
       },
       UpdateExpression:
-        "set title = :title, author = :author, publishYear = :publishYear, updatedAt = :updatedAt",
+        "set title = :title, author = :author, publishYear = :publishYear, updatedAt = :updatedAt" + (imageUrl ? ", imageUrl = :imageUrl" : ""),
       ExpressionAttributeValues: {
         ":title": { S: req.body.title },
         ":author": { S: req.body.author },
         ":publishYear": { N: req.body.publishYear.toString() },
         ":updatedAt": { S: new Date().toISOString() },
+        ...(imageUrl && { ":imageUrl": { S: imageUrl } }),
       },
     };
 

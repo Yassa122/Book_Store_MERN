@@ -10,10 +10,12 @@ const EditBook = () => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [publishYear, setPublishYear] = useState("");
+  const [image, setImage] = useState(null); // State for the new image
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams();
   const { enqueueSnackbar } = useSnackbar();
+
   useEffect(() => {
     setLoading(true);
     axios
@@ -30,15 +32,31 @@ const EditBook = () => {
         console.log(error);
       });
   }, [id]);
+
   const handleEditBook = () => {
-    const data = {
-      title,
-      author,
-      publishYear,
-    };
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("author", author);
+    formData.append("publishYear", publishYear);
+    console.log("**************" , image);
+
+    if (image) {
+      console.log("11111111111111");
+      formData.append("image", image);
+    }
+
+    console.log(title);
+    console.log(author);
+    console.log(publishYear);
+    console.log(image);
+
     setLoading(true);
     axios
-      .put(`http://localhost:5555/books/${id}`, data)
+      .put(`http://localhost:5555/books/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
       .then(() => {
         setLoading(false);
         enqueueSnackbar("Book Edited Successfully", { variant: "success" });
@@ -46,8 +64,8 @@ const EditBook = () => {
       })
       .catch((error) => {
         setLoading(false);
-        enqueueSnackbar("Book Edited Successfully", { variant: "success" });
-        navigate("/");
+        enqueueSnackbar("Failed to edit book", error);
+        console.error("Error editing book:", error);
       });
   };
 
@@ -81,6 +99,14 @@ const EditBook = () => {
             type="text"
             value={publishYear}
             onChange={(e) => setPublishYear(e.target.value)}
+            className="border-2 border-gray-500 px-4 py-2 w-full"
+          />
+        </div>
+        <div className="my-4">
+          <label className="text-xl mr-4 text-gray-500">Image</label>
+          <input
+            type="file"
+            onChange={(e) => setImage(e.target.files[0])}
             className="border-2 border-gray-500 px-4 py-2 w-full"
           />
         </div>
